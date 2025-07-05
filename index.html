@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products Knowledge - Final Assessment</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap');
+
+        :root {
+            --primary-color: #8e44ad; /* Amethyst */
+            --primary-dark: #732d91;
+            --secondary-color: #2c3e50; /* Midnight Blue */
+            --correct-color: #27ae60;
+            --incorrect-color: #c0392b;
+            --bg-gradient: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+            --container-bg: #ffffff;
+            --font-en: 'Montserrat', sans-serif;
+            --font-bn: 'Hind Siliguri', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-en);
+            background: var(--bg-gradient);
+            color: var(--secondary-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 10px;
+            overflow: hidden;
+        }
+
+        body.lang-bn { font-family: var(--font-bn); }
+
+        .notification-bar {
+            position: fixed; top: -100px; left: 50%; transform: translateX(-50%); background-color: var(--incorrect-color); color: white;
+            padding: 12px 25px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); font-size: 1rem;
+            font-weight: 600; z-index: 1000; transition: top 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            max-width: 90%;
+        }
+        .notification-bar.show { top: 0; }
+
+        .quiz-container {
+            background-color: var(--container-bg); width: 100%; max-width: 750px; border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3); overflow: hidden; text-align: center;
+        }
+
+        .quiz-header { padding: 15px 20px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: flex-end; }
+        .lang-switcher button {
+            background: #f4f4f4; border: 1px solid #ccc; padding: 8px 15px; cursor: pointer; border-radius: 20px;
+            font-weight: 600; transition: all 0.3s;
+        }
+        #lang-en { font-family: var(--font-en); }
+        #lang-bn { font-family: var(--font-bn); }
+
+        .lang-switcher button.active { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
+        .lang-switcher button:first-child { margin-right: 8px; }
+
+        .screen { padding: 25px; animation: fadeIn 0.7s cubic-bezier(0.25, 1, 0.5, 1); }
+        .screen.hidden { display: none; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 50%, 90% { transform: translateX(-6px); } 30%, 70% { transform: translateX(6px); } }
+        .shake { animation: shake 0.4s ease-in-out; }
+        .invalid-field { border-color: var(--incorrect-color) !important; }
+
+        h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 15px; color: var(--primary-color); }
+        h2 { font-size: 1.25rem; margin-bottom: 20px; line-height: 1.5; }
+        p { font-size: 1rem; margin-bottom: 20px; line-height: 1.7; color: #555; }
+
+        .input-group { margin-bottom: 15px; text-align: left; }
+        .input-group label { font-weight: 600; display: block; margin-bottom: 8px; font-size: 0.9rem; }
+        .input-group input[type="text"], .open-ended-textarea {
+            width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: inherit; transition: all 0.3s;
+        }
+        .input-group input[type="text"]:focus, .open-ended-textarea:focus {
+            border-color: var(--primary-color); box-shadow: 0 0 8px rgba(142, 68, 173, 0.2); outline: none;
+        }
+        .open-ended-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .screenshot-container { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
+        .screenshot-upload { flex: 1; }
+        .screenshot-upload .upload-label { display: block; padding: 12px; background-color: #f8f9fa; border: 2px dashed #ccc; border-radius: 12px; cursor: pointer; font-weight: 500; transition: all 0.3s; }
+        .screenshot-upload .upload-label:hover { border-color: var(--primary-color); background-color: #f3e5f7; }
+        .screenshot-upload input[type="file"] { display: none; }
+        .screenshot-preview { width: 100%; height: 120px; object-fit: cover; margin-top: 15px; border-radius: 12px; border: 2px solid #ddd; }
+
+        .btn { display: inline-block; padding: 12px 28px; font-size: 1rem; font-weight: 600; color: #fff; background: var(--primary-color); border: none; border-radius: 30px; cursor: pointer; transition: all 0.3s; margin: 5px; text-transform: uppercase; letter-spacing: 1px; }
+        .btn:hover { background: var(--primary-dark); transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 20px rgba(142, 68, 173, 0.3); }
+        .btn:disabled { background: #bdc3c7; cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn-secondary { background: #95a5a6; }
+        .btn-secondary:hover { background: #7f8c8d; }
+        .btn-full { width: 100%; margin-top: 20px; }
+
+        #navigation-btns { margin-top: 25px; }
+
+        .progress-bar { width: 100%; height: 8px; background-color: #e0e0e0; border-radius: 4px; margin-bottom: 15px; overflow: hidden; }
+        #progress-indicator { height: 100%; width: 0%; background: linear-gradient(90deg, #8e44ad, #9b59b6); transition: width 0.5s ease; }
+        #progress-text { font-weight: 600; color: var(--primary-dark); margin-bottom: 20px; font-size: 0.9rem; }
+
+        .options-list { list-style: none; text-align: left; }
+        .options-list li {
+            padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; margin-bottom: 10px; cursor: pointer; transition: all 0.3s;
+            position: relative; display: flex; align-items: center; justify-content: space-between; font-size: 0.9rem;
+        }
+        .options-list li:hover { background-color: #f3e5f7; }
+        .options-list li.correct { background-color: #d5f5e3; border-color: var(--correct-color); color: #218838; font-weight: 600; }
+        .options-list li.incorrect { background-color: #fadbd8; border-color: var(--incorrect-color); color: #a94442; font-weight: 600; }
+        .options-list.disabled li { pointer-events: none; }
+        .feedback-icon { font-size: 1.2rem; font-weight: bold; }
+
+        #review-list { max-height: 350px; overflow-y: auto; text-align: left; padding-right: 10px; }
+        .review-item { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
+        .review-item .options-list li { cursor: default; }
+        .review-item .options-list li.user-answer.incorrect { background-color: #fadbd8; border-color: var(--incorrect-color); }
+        .review-item .options-list li.correct-answer { background-color: #d5f5e3; border-color: var(--correct-color); }
+        .review-open-answer {
+            background-color: #f8f9fa; border-left: 4px solid var(--primary-color); padding: 15px;
+            margin-top: 10px; border-radius: 0 8px 8px 0; font-style: italic; color: #333;
+        }
+
+        .score-circle { position: relative; width: 180px; height: 180px; margin: 20px auto; }
+        .score-circle svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+        .score-circle circle { fill: none; stroke-width: 15; }
+        .score-bg { stroke: #ecf0f1; }
+        .score-progress { stroke: var(--primary-color); stroke-linecap: round; stroke-dasharray: 502; stroke-dashoffset: 502; transition: stroke-dashoffset 1.8s cubic-bezier(0.25, 1, 0.5, 1); }
+        .score-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2.5rem; font-weight: 700; color: var(--primary-dark); }
+
+        @media (min-width: 768px) {
+            body { padding: 20px; }
+            .screen { padding: 40px; }
+            h1 { font-size: 2.4rem; } h2 { font-size: 1.6rem; } p { font-size: 1.1rem; }
+            .input-group label { font-size: 1rem; }
+            .screenshot-container { flex-direction: row; }
+            #navigation-btns { display: flex; justify-content: space-between; align-items: center; }
+            #navigation-btns .btn { width: auto; }
+            .score-circle { width: 200px; height: 200px; }
+            .score-circle circle { stroke-width: 18; }
+            .score-circle .score-progress { stroke-dasharray: 565; stroke-dashoffset: 565; }
+            .score-text { font-size: 3rem; }
+            .options-list li { font-size: 1rem; padding: 15px; }
+            .feedback-icon { font-size: 1.5rem; }
+            .notification-bar { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="notification-bar" id="notification-bar"></div>
+
+<div class="quiz-container">
+    <div class="quiz-header">
+        <div class="lang-switcher">
+            <button id="lang-en" class="active">English</button>
+            <button id="lang-bn">বাংলা</button>
+        </div>
+    </div>
+
+    <div class="screen" id="welcome-screen">
+        <h1 id="welcome-title"></h1>
+        <div class="input-group">
+            <label for="userName" id="name-label"></label>
+            <input type="text" id="userName" required>
+        </div>
+        <div class="input-group">
+            <label for="mentorName" id="mentor-label"></label>
+            <input type="text" id="mentorName" required>
+        </div>
+        <div class="screenshot-container">
+            <div class="screenshot-upload">
+                <p class="upload-title" id="upload-title-1"></p>
+                <label class="upload-label" for="ss-upload-1" id="upload-label-1"></label>
+                <input type="file" id="ss-upload-1" accept="image/*">
+                <img id="ss-preview-1" class="screenshot-preview hidden">
+            </div>
+            <div class="screenshot-upload">
+                <p class="upload-title" id="upload-title-2"></p>
+                <label class="upload-label" for="ss-upload-2" id="upload-label-2"></label>
+                <input type="file" id="ss-upload-2" accept="image/*">
+                <img id="ss-preview-2" class="screenshot-preview hidden">
+            </div>
+        </div>
+        <button class="btn btn-full" id="start-btn"></button>
+    </div>
+
+    <div class="screen hidden" id="quiz-screen">
+        <div id="progress-text"></div>
+        <div class="progress-bar"><div id="progress-indicator"></div></div>
+        <div id="q-animation-wrapper">
+            <h2 id="question-text"></h2>
+            <div id="options-container"></div>
+        </div>
+        <div id="navigation-btns">
+            <button class="btn btn-secondary" id="prev-btn"></button>
+            <button class="btn" id="next-btn"></button>
+        </div>
+    </div>
+
+    <div class="screen hidden" id="results-screen">
+        <h1 id="result-heading"></h1>
+        <div class="score-circle">
+            <svg><circle class="score-bg" cx="100" cy="100" r="90"></circle><circle class="score-progress" id="score-progress" cx="100" cy="100" r="90"></circle></svg>
+            <div class="score-text" id="score-percentage">0%</div>
+        </div>
+        <p id="score-details"></p>
+        <button class="btn" id="review-btn"></button>
+        <button class="btn btn-secondary" id="restart-btn"></button>
+    </div>
+
+    <div class="screen hidden" id="review-screen">
+        <h1 id="review-title"></h1>
+        <div id="review-list"></div>
+        <button class="btn" id="back-to-results-btn"></button>
+    </div>
+</div>
+
+<script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw6qk7DMjlc0wJOM1NsLkF0sgo3yg2VhkjA9IiHE8lZGUkiRMxf4CKY9pg0sv5JwB3t0w/exec";
+
+    const uiStrings = {
+        en: { welcomeTitle: "Products Knowledge", nameLabel: "Your Name", mentorLabel: "Mentor's Name", namePlaceholder: "Enter your full name...", mentorPlaceholder: "Enter mentor's name (e.g., John Doe Sir)", uploadTitle1: "Start of Class", uploadTitle2: "End of Class", uploadLabel: "Click to Upload Screenshot", uploadSuccess: "Uploaded!", startBtn: "Start Quiz", progressText: (c, t) => `Question ${c} of ${t}`, prevBtn: "Previous", nextBtn: "Next", resultsBtn: "Finish & See Results", resultHeading: (name) => `Well done, ${name}!`, scoreDetails: (s, t) => `You scored ${s} out of ${t} in multiple choice questions.`, restartBtn: "Take Quiz Again", reviewBtn: "Review Answers", reviewTitle: "Answer Review", backToResultsBtn: "Back to Results", notifyName: "Please enter your name.", notifyMentor: "Please enter mentor's name correctly (with Sir/Mam).", notifySS1: "Please upload the start of class screenshot.", notifySS2: "Please upload the end of class screenshot.", notifyDuplicateSS: "Please upload two different screenshots.", submissionInProgress: "Submitting...", submissionSuccess: "Submission Successful!", submissionError: "Submission Failed! Please try again.", openEndedPlaceholder: "Write your answer here..." },
+        bn: { welcomeTitle: "প্রোডাক্ট পরিচিতি", nameLabel: "আপনার নাম", mentorLabel: "মেন্টরের নাম", namePlaceholder: "আপনার সম্পূর্ণ নাম লিখুন...", mentorPlaceholder: "মেন্টরের নাম লিখুন (যেমন, জন ডো স্যার)", uploadTitle1: "ক্লাসের শুরু", uploadTitle2: "ক্লাসের শেষ", uploadLabel: "স্ক্রিনশট আপলোড করুন", uploadSuccess: "আপলোড হয়েছে!", startBtn: "কুইজ শুরু করুন", progressText: (c, t) => `প্রশ্ন ${t}-এর মধ্যে ${c}`, prevBtn: "পূর্ববর্তী", nextBtn: "পরবর্তী", resultsBtn: "শেষ করুন ও ফলাফল দেখুন", resultHeading: (name) => `খুব ভালো, ${name}!`, scoreDetails: (s, t) => `আপনি বহুনির্বাচনী প্রশ্নগুলোর মধ্যে ${t}টির মধ্যে ${s}টি সঠিক করেছেন।`, restartBtn: "আবার কুইজ দিন", reviewBtn: "উত্তর পর্যালোচনা করুন", reviewTitle: "উত্তর পর্যালোচনা", backToResultsBtn: "ফলাফলে ফিরে যান", notifyName: "অনুগ্রহ করে আপনার নাম লিখুন।", notifyMentor: "মেন্টরের নাম সঠিকভাবে লিখুন (স্যার/ম্যাম সহ)।", notifySS1: "ক্লাসের শুরুর স্ক্রিনশট আপলোড করুন।", notifySS2: "ক্লাসের শেষের স্ক্রিনশট আপলোড করুন।", notifyDuplicateSS: "অনুগ্রহ করে দুটি ভিন্ন স্ক্রিনশট আপলোড করুন।", submissionInProgress: "জমা দেওয়া হচ্ছে...", submissionSuccess: "সফলভাবে জমা দেওয়া হয়েছে!", submissionError: "জমা দিতে ব্যর্থ! আবার চেষ্টা করুন。", openEndedPlaceholder: "আপনার উত্তর এখানে লিখুন..." }
+    };
+    const quizData = [
+        { type: 'mcq', question: { en: "Forever Aloe Vera Gel...", bn: "ফরএভার অ্যালোভেরা জেল..." }, options: { en: ['Detoxifies Toxins from Body', 'Provides 270 Nutritions', 'Enhances Immunity', 'All of them'], bn: ['শরীর থেকে টক্সিন বের করে', '২৭০টি পুষ্টি সরবরাহ করে', 'রোগ প্রতিরোধ ক্ষমতা বাড়ায়', 'সবগুলো'] }, answerKey: 'All of them' },
+        { type: 'mcq', question: { en: "Which variety is the best among 400 varieties of Aloe?", bn: "অ্যালোভেরার ৪০০টি জাতের মধ্যে কোনটি সেরা?" }, options: { en: ['Aloe Ferox', 'Aloe Barbadensis Miller', 'Aloe Aculeata', 'Aloe Aristata'], bn: ['অ্যালো ফেরক্স', 'অ্যালো বার্বাডেনসিস মিলার', 'অ্যালো একুলিয়াটা', 'অ্যালো অ্যারিস্টাটা'] }, answerKey: 'Aloe Barbadensis Miller' },
+        { type: 'mcq', question: { en: "Forever Products are related to", bn: "ফরএভার প্রোডাক্টগুলো কিসের সাথে সম্পর্কিত?" }, options: { en: ['Toy Products', 'Health & Beauty', 'Grocery Products', 'Electronics'], bn: ['খেলনা পণ্য', 'স্বাস্থ্য ও সৌন্দর্য', 'মুদি পণ্য', 'ইলেকট্রনিক্স'] }, answerKey: 'Health & Beauty' },
+        { type: 'mcq', question: { en: "Forever Products are", bn: "ফরএভার প্রোডাক্টগুলো হলো" }, options: { en: ['Patent Stabilised', '333 Quality Tested', 'World Class & Premium Quality', 'All of the above'], bn: ['পেটেন্ট দ্বারা স্থিতিশীল', '৩৩৩ বার কোয়ালিটি পরীক্ষিত', 'বিশ্বমানের এবং প্রিমিয়াম মানের', 'উপরের সবগুলো'] }, answerKey: 'All of the above' },
+        { type: 'mcq', question: { en: "Why should you use Forever Products?", bn: "আপনার কেন ফরএভার প্রোডাক্ট ব্যবহার করা উচিত?" }, options: { en: ['Conviction on Product Quality', 'Practically Minded & Asset Building', 'Look Better & Feel Better', 'All of the above'], bn: ['পণ্যের গুণমানের উপর বিশ্বাস', 'বাস্তবসম্মত মানসিকতা এবং সম্পদ তৈরি', 'দেখতে আরও ভালো এবং অনুভব করতে আরও ভালো', 'উপরের সবগুলো'] }, answerKey: 'All of the above' },
+        { type: 'mcq', question: { en: "What do you think of 'Market Value' of the products?", bn: "পণ্যগুলোর 'বাজার মূল্য' সম্পর্কে আপনি কী মনে করেন?" }, options: { en: ['Very Huge', 'Sufficient', 'Don’t Think So', 'Not Sure'], bn: ['অনেক বেশি', 'পর্যাপ্ত', 'তা মনে করি না', 'নিশ্চিত নই'] }, answerKey: 'Very Huge' },
+        { type: 'open', question: { en: "What 3 products you loved the most?", bn: "কোন ৩টি পণ্য আপনার সবচেয়ে বেশি ভালো লেগেছে?" } },
+        { type: 'open', question: { en: "Why’re you planning to consume these products for yourself?", bn: "আপনি নিজের জন্য এই পণ্যগুলো ব্যবহার করার পরিকল্পনা কেন করছেন?" } },
+        { type: 'mcq', question: { en: "Forever Living Products (FLP)", bn: "ফরএভার লিভিং প্রোডাক্টস (FLP)" }, options: { en: ["Is listed in 'Most Beloved Brand in Korea'", 'Has Gold Awarded & Nobel Prize Winning Product', '1.4 Million Quality Tests of Products', 'All of the above'], bn: ["কোরিয়ার 'সবচেয়ে প্রিয় ব্র্যান্ড'-এর তালিকায় রয়েছে", 'গোল্ড অ্যাওয়ার্ড এবং নোবেল পুরস্কার বিজয়ী পণ্য রয়েছে', 'পণ্যের ১.৪ মিলিয়ন গুণমান পরীক্ষা করা হয়', 'উপরের সবগুলো'] }, answerKey: 'All of the above' },
+        { type: 'open', question: { en: "What's the most fascinating topic of these products you think?", bn: "আপনার মতে এই পণ্যগুলোর সবচেয়ে আকর্ষণীয় বিষয় কোনটি?" } }
+    ];
+
+    let currentLanguage = 'en';
+    let currentQuestionIndex = 0;
+    let userAnswers = new Array(quizData.length).fill(null);
+    let userName = '', mentorName = '';
+    let screenshotFile1 = null, screenshotFile2 = null;
+    let screenshotBase64_1 = null, screenshotBase64_2 = null;
+
+    const body = document.body;
+    const screens = { welcome: document.getElementById('welcome-screen'), quiz: document.getElementById('quiz-screen'), results: document.getElementById('results-screen'), review: document.getElementById('review-screen') };
+    const notificationBar = document.getElementById('notification-bar');
+    const langEnBtn = document.getElementById('lang-en'), langBnBtn = document.getElementById('lang-bn');
+    const startBtn = document.getElementById('start-btn'), prevBtn = document.getElementById('prev-btn'), nextBtn = document.getElementById('next-btn');
+    const restartBtn = document.getElementById('restart-btn'), reviewBtn = document.getElementById('review-btn'), backToResultsBtn = document.getElementById('back-to-results-btn');
+    const userNameInput = document.getElementById('userName'), mentorNameInput = document.getElementById('mentorName');
+
+    setLanguage('en');
+
+    langEnBtn.addEventListener('click', () => setLanguage('en'));
+    langBnBtn.addEventListener('click', () => setLanguage('bn'));
+    startBtn.addEventListener('click', startQuiz);
+    prevBtn.addEventListener('click', handlePrevButton);
+    nextBtn.addEventListener('click', handleNextButton);
+    restartBtn.addEventListener('click', restartQuiz);
+    reviewBtn.addEventListener('click', () => switchScreen('review'));
+    backToResultsBtn.addEventListener('click', () => switchScreen('results'));
+    document.getElementById('ss-upload-1').addEventListener('change', (e) => handleFileUpload(e, 1));
+    document.getElementById('ss-upload-2').addEventListener('change', (e) => handleFileUpload(e, 2));
+
+    function setLanguage(lang) {
+        currentLanguage = lang;
+        body.classList.toggle('lang-bn', lang === 'bn');
+        langEnBtn.classList.toggle('active', lang === 'en');
+        langBnBtn.classList.toggle('active', lang === 'bn');
+        updateAllUIText();
+    }
+
+    function updateAllUIText() {
+        const t = uiStrings[currentLanguage];
+        document.title = `${t.welcomeTitle} - Final Assessment`;
+        document.getElementById('welcome-title').innerText = t.welcomeTitle;
+        document.getElementById('name-label').innerText = t.nameLabel;
+        document.getElementById('mentor-label').innerText = t.mentorLabel;
+        userNameInput.placeholder = t.namePlaceholder;
+        mentorNameInput.placeholder = t.mentorPlaceholder;
+        if (!screenshotFile1) document.getElementById('upload-label-1').innerText = t.uploadLabel;
+        if (!screenshotFile2) document.getElementById('upload-label-2').innerText = t.uploadLabel;
+        document.getElementById('upload-title-1').innerText = t.uploadTitle1;
+        document.getElementById('upload-title-2').innerText = t.uploadTitle2;
+        startBtn.innerText = t.startBtn;
+        prevBtn.innerText = t.prevBtn;
+        restartBtn.innerText = t.restartBtn;
+        reviewBtn.innerText = t.reviewBtn;
+        document.getElementById('review-title').innerText = t.reviewTitle;
+        backToResultsBtn.innerText = t.backToResultsBtn;
+
+        if (!screens.quiz.classList.contains('hidden')) showQuestion();
+        if (!screens.review.classList.contains('hidden')) buildReviewScreen();
+        if (!screens.results.classList.contains('hidden')) {
+            let score = 0;
+            const totalMcq = quizData.filter(q => q.type === 'mcq').length;
+            userAnswers.forEach((answer, index) => {
+                if (quizData[index].type === 'mcq' && answer === quizData[index].answerKey) score++;
+            });
+            document.getElementById('result-heading').innerText = t.resultHeading(userName);
+            document.getElementById('score-details').innerText = t.scoreDetails(score, totalMcq);
+        }
+    }
+
+    function showQuestion() {
+        const qWrapper = document.getElementById('q-animation-wrapper');
+        qWrapper.style.animation = 'none'; void qWrapper.offsetWidth;
+        qWrapper.style.animation = 'fadeIn 0.5s ease-in-out';
+
+        const optionsContainer = document.getElementById('options-container');
+        optionsContainer.innerHTML = ''; // Clear previous options/textarea
+
+        const currentQuestion = quizData[currentQuestionIndex];
+        const t = uiStrings[currentLanguage];
+
+        document.getElementById('progress-indicator').style.width = `${((currentQuestionIndex + 1) / quizData.length) * 100}%`;
+        document.getElementById('progress-text').innerText = t.progressText(currentQuestionIndex + 1, quizData.length);
+        document.getElementById('question-text').innerText = currentQuestion.question[currentLanguage];
+
+        if (currentQuestion.type === 'mcq') {
+            const optionsList = document.createElement('ul');
+            optionsList.className = 'options-list';
+            currentQuestion.options[currentLanguage].forEach((option, index) => {
+                const li = document.createElement('li');
+                const textSpan = document.createElement('span');
+                textSpan.innerText = option;
+                li.appendChild(textSpan);
+                li.dataset.answerKey = currentQuestion.options.en[index];
+                li.addEventListener('click', selectOption);
+                optionsList.appendChild(li);
+            });
+            optionsContainer.appendChild(optionsList);
+            if (userAnswers[currentQuestionIndex]) {
+                showInstantFeedback();
+            }
+        } else if (currentQuestion.type === 'open') {
+            const textArea = document.createElement('textarea');
+            textArea.className = 'open-ended-textarea';
+            textArea.placeholder = t.openEndedPlaceholder;
+            textArea.value = userAnswers[currentQuestionIndex] || '';
+            textArea.addEventListener('input', (e) => {
+                userAnswers[currentQuestionIndex] = e.target.value;
+                updateNavigation();
+            });
+            optionsContainer.appendChild(textArea);
+        }
+        updateNavigation();
+    }
+
+    function selectOption(e) {
+        const optionsList = e.target.closest('.options-list');
+        if (optionsList.classList.contains('disabled')) return;
+        userAnswers[currentQuestionIndex] = e.target.closest('li').dataset.answerKey;
+        showInstantFeedback();
+        updateNavigation();
+    }
+
+    function showInstantFeedback() {
+        const optionsList = document.querySelector('.options-list');
+        if (!optionsList) return;
+        optionsList.classList.add('disabled');
+        const correctAnswerKey = quizData[currentQuestionIndex].answerKey;
+        Array.from(optionsList.children).forEach(li => {
+            if(li.querySelector('.feedback-icon')) li.querySelector('.feedback-icon').remove();
+            const icon = document.createElement('span'); icon.className = 'feedback-icon';
+            if (li.dataset.answerKey === correctAnswerKey) {
+                li.classList.add('correct'); icon.innerHTML = '✔'; li.appendChild(icon);
+            } else if (li.dataset.answerKey === userAnswers[currentQuestionIndex]) {
+                li.classList.add('incorrect'); icon.innerHTML = '✖'; li.appendChild(icon);
+            }
+        });
+    }
+
+    function handlePrevButton() { if(currentQuestionIndex > 0) { currentQuestionIndex--; showQuestion(); } }
+    function handleNextButton() { if (currentQuestionIndex < quizData.length - 1) { currentQuestionIndex++; showQuestion(); } else { showResults(); } }
+
+    function updateNavigation() {
+        prevBtn.disabled = currentQuestionIndex === 0;
+        const currentAnswer = userAnswers[currentQuestionIndex];
+        nextBtn.disabled = !currentAnswer || currentAnswer.trim() === '';
+        nextBtn.innerText = uiStrings[currentLanguage][currentQuestionIndex === quizData.length - 1 ? 'resultsBtn' : 'nextBtn'];
+    }
+
+    function showResults() {
+        let score = 0;
+        const totalMcq = quizData.filter(q => q.type === 'mcq').length;
+        userAnswers.forEach((answer, index) => {
+            if (quizData[index].type === 'mcq' && answer === quizData[index].answerKey) {
+                score++;
+            }
+        });
+        const percentage = totalMcq > 0 ? Math.round((score / totalMcq) * 100) : 0;
+
+        submitDataToSheet(score, percentage);
+
+        switchScreen('results');
+        const t = uiStrings[currentLanguage];
+        document.getElementById('result-heading').innerText = t.resultHeading(userName);
+        document.getElementById('score-percentage').innerText = `${percentage}%`;
+        document.getElementById('score-details').innerText = t.scoreDetails(score, totalMcq);
+
+        const circle = document.getElementById('score-progress');
+        const radius = circle.r.baseVal.value;
+        const circumference = 2 * Math.PI * radius;
+        const offset = circumference - (percentage / 100) * circumference;
+        setTimeout(() => circle.style.strokeDashoffset = offset, 100);
+
+        buildReviewScreen();
+    }
+
+    function buildReviewScreen() {
+        const reviewList = document.getElementById('review-list');
+        reviewList.innerHTML = '';
+        quizData.forEach((q, index) => {
+            const item = document.createElement('div');
+            const questionText = document.createElement('h2');
+            item.className = 'review-item';
+            questionText.innerText = (index + 1) + '. ' + q.question[currentLanguage];
+            item.appendChild(questionText);
+
+            if (q.type === 'mcq') {
+                const optionsUl = document.createElement('ul');
+                optionsUl.className = 'options-list';
+                q.options[currentLanguage].forEach((opt, optIndex) => {
+                    const li = document.createElement('li');
+                    const englishOptKey = q.options.en[optIndex];
+                    li.innerText = opt;
+                    if (englishOptKey === q.answerKey) li.classList.add('correct-answer');
+                    if (englishOptKey === userAnswers[index]) {
+                        li.classList.add('user-answer');
+                        if (userAnswers[index] !== q.answerKey) li.classList.add('incorrect');
+                    }
+                    optionsUl.appendChild(li);
+                });
+                item.appendChild(optionsUl);
+            } else if (q.type === 'open') {
+                const answerP = document.createElement('p');
+                answerP.className = 'review-open-answer';
+                answerP.innerText = userAnswers[index] || '(No answer provided)';
+                item.appendChild(answerP);
+            }
+            reviewList.appendChild(item);
+        });
+    }
+
+    function showNotification(message, isSuccess = false) {
+        notificationBar.innerText = message;
+        notificationBar.style.backgroundColor = isSuccess ? 'var(--correct-color)' : 'var(--incorrect-color)';
+        notificationBar.classList.add('show');
+        setTimeout(() => notificationBar.classList.remove('show'), 3000);
+    }
+
+    function triggerShake(element) {
+        element.classList.add('shake', 'invalid-field');
+        setTimeout(() => element.classList.remove('shake', 'invalid-field'), 500);
+    }
+
+    function validateWelcomeScreen() {
+        const t = uiStrings[currentLanguage];
+        if (userNameInput.value.trim() === '') {
+            showNotification(t.notifyName); triggerShake(userNameInput); return false;
+        }
+
+        const mentorNameVal = mentorNameInput.value.trim();
+        const mentorNameLower = mentorNameVal.toLowerCase();
+        const validSuffixes = ['sir', 'mam', 'স্যার', 'ম্যাম'];
+        const hasValidSuffix = validSuffixes.some(suffix => mentorNameLower.endsWith(` ${suffix}`) || mentorNameLower.endsWith(suffix));
+        const namePart = mentorNameVal.replace(/sir|mam|স্যার|ম্যাম/gi, '').trim();
+        if (namePart === '' || !hasValidSuffix) {
+            showNotification(t.notifyMentor); triggerShake(mentorNameInput); return false;
+        }
+
+        if (!screenshotFile1) { showNotification(t.notifySS1); triggerShake(document.getElementById('upload-label-1')); return false; }
+        if (!screenshotFile2) { showNotification(t.notifySS2); triggerShake(document.getElementById('upload-label-2')); return false; }
+
+        if (screenshotFile1 && screenshotFile2 && screenshotFile1.name === screenshotFile2.name && screenshotFile1.size === screenshotFile2.size) {
+            showNotification(t.notifyDuplicateSS);
+            triggerShake(document.getElementById('upload-label-1'));
+            triggerShake(document.getElementById('upload-label-2'));
+            return false;
+        }
+        return true;
+    }
+
+    function handleFileUpload(e, num) {
+        const file = e.target.files[0], previewEl = document.getElementById(`ss-preview-${num}`), labelEl = document.getElementById(`upload-label-${num}`);
+        if (file && file.type.startsWith('image/')) {
+            if(num === 1) screenshotFile1 = file; else screenshotFile2 = file;
+            previewEl.src = URL.createObjectURL(file);
+            previewEl.classList.remove('hidden');
+            labelEl.innerText = uiStrings[currentLanguage].uploadSuccess;
+            labelEl.classList.remove('invalid-field');
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                if (num === 1) screenshotBase64_1 = event.target.result;
+                else screenshotBase64_2 = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function switchScreen(screenToShow) { Object.values(screens).forEach(s => s.classList.add('hidden')); screens[screenToShow].classList.remove('hidden'); }
+    function startQuiz() { if (!validateWelcomeScreen()) return; userName = userNameInput.value.trim(); mentorName = mentorNameInput.value.trim(); switchScreen('quiz'); showQuestion(); }
+
+    function submitDataToSheet(score, percentage) {
+        const formData = new FormData();
+        formData.append('UserName', userName);
+        formData.append('MentorName', mentorName);
+        formData.append('Score', score);
+        formData.append('Percentage', percentage);
+
+        userAnswers.forEach((answer, index) => {
+            formData.append(`Q${index + 1}_Answer`, answer || 'Not Answered');
+        });
+
+        formData.append('screenshot1', screenshotBase64_1);
+        formData.append('screenshot2', screenshotBase64_2);
+
+        const submissionBtn = document.getElementById('review-btn');
+        const originalText = submissionBtn.innerText;
+        submissionBtn.disabled = true;
+        reviewBtn.style.backgroundColor = '#bdc3c7';
+        submissionBtn.innerText = uiStrings[currentLanguage].submissionInProgress;
+
+        fetch(SCRIPT_URL, { method: 'POST', body: formData})
+            .then(response => response.json())
+            .then(data => {
+                if(data.result === 'success'){
+                    showNotification(uiStrings[currentLanguage].submissionSuccess, true);
+                } else {
+                    throw new Error(data.error || 'Unknown error');
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                showNotification(uiStrings[currentLanguage].submissionError);
+            })
+            .finally(() => {
+                submissionBtn.disabled = false;
+                reviewBtn.style.backgroundColor = 'var(--primary-color)';
+                submissionBtn.innerText = originalText;
+            });
+    }
+
+    function restartQuiz() { window.location.reload(); }
+</script>
+</body>
+</html>
